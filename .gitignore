@@ -1,0 +1,6 @@
+.idea/
+*.iml
+ziweidoushu_desktop/src-tauri/target
+ziweidoushu_desktop/dist
+ziweidoushu_desktop/package-lock.json
+ziweidoushu_desktop/src-tauri/Cargo.lock

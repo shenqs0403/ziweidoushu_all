@@ -226,11 +226,13 @@ onMounted(() => {
                   <span v-if="star.hua" class="hua" :class="`hua-${star.hua}`">{{ star.hua }}</span>
                 </div>
               </div>
-              <div class="level-label" v-if="labelPrefix">{{ palaceLevelLabel(palaceAt(branchIndex)!.name) }}</div>
               <div class="cell-foot">
                 <span class="gz">{{ palaceAt(branchIndex)!.stemBranch }}</span>
                 <span class="age">{{ palaceAt(branchIndex)!.daxianStart }}-{{ palaceAt(branchIndex)!.daxianStart + 9 }}</span>
-                <span class="pname">{{ palaceAt(branchIndex)!.name === '命宫' ? '命宫' : palaceAt(branchIndex)!.name }}</span>
+                <span class="foot-right">
+                  <span class="level-label" v-if="labelPrefix">{{ palaceLevelLabel(palaceAt(branchIndex)!.name) }}</span>
+                  <span class="pname">{{ palaceAt(branchIndex)!.name === '命宫' ? '命宫' : palaceAt(branchIndex)!.name }}</span>
+                </span>
               </div>
             </div>
           </div>
@@ -251,12 +253,19 @@ onMounted(() => {
               <span class="hua hua-科">科</span>
               <span class="hua hua-忌">忌</span>
             </div>
+            <div class="hua-tip">
+              时间颜色　<span style="color:#1f2937;font-weight:700">大限</span>
+              <span style="color:#2563eb;font-weight:700">流年</span>
+              <span style="color:#7c3aed;font-weight:700">流月</span>
+              <span style="color:#0891b2;font-weight:700">流日</span>
+              <span style="color:#ea580c;font-weight:700">流时</span>
+            </div>
           </div>
         </template>
       </div>
 
       <div class="limit-block">
-        <div class="limit-row">
+        <div class="limit-row daxian-row">
           <span class="lb-title">大限</span>
           <span v-for="d in daxianPreview" :key="'dx' + d.index" class="lt-cell" :class="{ sel: selectedDecade === d.index }" @click="clickDecade(d)">
             <span class="lt-age">{{ d.start }}-{{ d.start + 9 }}</span>
@@ -267,7 +276,7 @@ onMounted(() => {
             <span class="lt-gz">起限前(童限)</span>
           </span>
         </div>
-        <div class="limit-row">
+        <div class="limit-row liunian-row">
           <span class="lb-title">流年</span>
           <span v-for="l in liunianPreview" :key="'ln' + l.year" class="lt-cell" :class="{ sel: selectedYear && selectedYear.year === l.year && selectedYear.age === l.age }" @click="clickYear(l)">
             <span class="lt-gz">{{ l.year }}</span>
@@ -275,19 +284,19 @@ onMounted(() => {
             <span class="lt-gz">{{ l.ganzhi }}</span>
           </span>
         </div>
-        <div class="limit-row">
+        <div class="limit-row liuyue-row">
           <span class="lb-title">流月</span>
           <span class="lt-cell" v-for="m in 12" :key="'m' + m" :class="{ sel: selectedMonth === m }" @click="clickMonth(m)">
             <span class="lt-age">{{ ['正','二','三','四','五','六','七','八','九','十','冬','腊'][m-1] }}月</span>
           </span>
         </div>
-        <div class="limit-row">
+        <div class="limit-row liuri-row">
           <span class="lb-title">流日</span>
           <span class="lt-cell" v-for="d in monthDayCount" :key="'d' + d" :class="{ sel: selectedDay === d }" @click="clickDay(d)">
             <span class="lt-age">{{ DAY_NAMES[d-1] }}</span>
           </span>
         </div>
-        <div class="limit-row">
+        <div class="limit-row liushi-row">
           <span class="lb-title">流时</span>
           <span class="lt-cell" v-for="h in 12" :key="'h' + h" :class="{ sel: selectedHour === h - 1 }" @click="clickHour(h - 1)">
             <span class="lt-age">{{ HOUR_NAMES[h-1] }}</span>
@@ -369,7 +378,8 @@ onMounted(() => {
 .cell-foot { margin-top: auto; display: flex; align-items: flex-end; gap: 4px; border-top: 1px dashed #e5e7eb; padding-top: 3px; }
 .gz { flex: 1; font-size: 10px; font-weight: 400; color: #4b5563; }
 .age { flex: 2; text-align: center; font-size: 10px; font-weight: 400; color: #4b5563; }
-.pname { flex: 1; text-align: right; font-size: 10px; font-weight: 700; color: #ef4444; }
+.pname { font-size: 10px; font-weight: 700; color: #ef4444; }
+.foot-right { flex: 1; display: flex; flex-direction: column; align-items: flex-end; }
 
 .center {
   grid-row: 2 / 4; grid-column: 2 / 4;
@@ -400,9 +410,16 @@ onMounted(() => {
 }
 .lt-cell { min-width: 56px; flex: 1; text-align: center; display: flex; flex-direction: column; border-right: 1px dashed #f3f4f6; padding: 0 2px; cursor: pointer; }
 .lt-cell.sel { background: #ede9fe; border-radius: 4px; }
-.level-label { font-size: 11px; color: #ef4444; font-weight: 600; margin-bottom: 2px; }
+.level-label { font-size: 10px; font-weight: 700; color: #ef4444; line-height: 1.2; white-space: nowrap; }
 .lt-age { font-size: 12px; font-weight: 700; color: #111; }
 .lt-gz { font-size: 11px; color: #6b7280; }
+
+/* 各层级参数的字体颜色区分 */
+.daxian-row .lt-age, .daxian-row .lt-gz { color: #1f2937; }
+.liunian-row .lt-age, .liunian-row .lt-gz { color: #2563eb; }
+.liuyue-row .lt-age, .liuyue-row .lt-gz { color: #7c3aed; }
+.liuri-row .lt-age, .liuri-row .lt-gz { color: #0891b2; }
+.liushi-row .lt-age, .liushi-row .lt-gz { color: #ea580c; }
 
 /* 星曜介绍抽屉 */
 .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; display: flex; align-items: flex-end; }

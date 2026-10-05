@@ -2,6 +2,7 @@ import type { PersonRecord } from '../types';
 
 const STORAGE_KEY = 'ziweidoushu_records';
 const ENCRYPTION_KEY = 'zwd_secret_2024';
+export const RECORDS_CHANGED_EVENT = 'ziweidoushu:records-changed';
 
 function encrypt(data: string): string {
   const xorKey = ENCRYPTION_KEY;
@@ -9,12 +10,13 @@ function encrypt(data: string): string {
   for (let i = 0; i < data.length; i++) {
     result += String.fromCharCode(data.charCodeAt(i) ^ xorKey.charCodeAt(i % xorKey.length));
   }
-  return btoa(result);
+  return btoa(String.fromCharCode(...new TextEncoder().encode(result)));
 }
 
 function decrypt(data: string): string {
   const xorKey = ENCRYPTION_KEY;
-  const decoded = atob(data);
+  const bytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+  const decoded = new TextDecoder().decode(bytes);
   let result = '';
   for (let i = 0; i < decoded.length; i++) {
     result += String.fromCharCode(decoded.charCodeAt(i) ^ xorKey.charCodeAt(i % xorKey.length));
@@ -27,6 +29,7 @@ export function saveRecords(records: PersonRecord[]): void {
     const data = JSON.stringify(records);
     const encrypted = encrypt(data);
     localStorage.setItem(STORAGE_KEY, encrypted);
+    window.dispatchEvent(new Event(RECORDS_CHANGED_EVENT));
   } catch (e) {
     console.error('保存失败:', e);
     throw new Error('保存失败，请重试');

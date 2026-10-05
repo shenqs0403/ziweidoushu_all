@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import type { PersonRecord } from '../types';
-import { loadRecords, deleteRecord } from '../utils/storage';
+import { loadRecords, deleteRecord, RECORDS_CHANGED_EVENT } from '../utils/storage';
 import { formatDate } from '../utils/helpers';
 
 const records = ref<PersonRecord[]>([]);
@@ -84,7 +84,14 @@ function selectGroup(group: string) {
   selectedGroup.value = group;
 }
 
-onMounted(refreshRecords);
+onMounted(() => {
+  refreshRecords();
+  window.addEventListener(RECORDS_CHANGED_EVENT, refreshRecords);
+});
+
+onUnmounted(() => {
+  window.removeEventListener(RECORDS_CHANGED_EVENT, refreshRecords);
+});
 </script>
 
 <template>

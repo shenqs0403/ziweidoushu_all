@@ -117,12 +117,13 @@ function clickHour(h: number) {
 
 // 当前生效被选中的宫位 branchIndex
 const activeBranch = computed<number | null>(() => {
-  if (selectedYear.value) return chart.value ? pad12(mingBranch() + selectedYear.value.age - 1) : null;
-  if (selectedDecade.value !== null && chart.value) {
+  if (!chart.value) return null;
+  if (selectedYear.value) return pad12(mingBranch() + selectedYear.value.age - 1);
+  if (selectedDecade.value !== null) {
     const p = chart.value.palaces.find(p => p.daxianIndex === selectedDecade.value);
     return p ? p.branchIndex : null;
   }
-  return selectedBranch.value;
+  return selectedBranch.value !== null ? selectedBranch.value : mingBranch();
 });
 
 // 三方四正
@@ -155,6 +156,9 @@ const liunianPreview = computed(() => {
   if (selectedDecade.value !== null) {
     const p = chart.value.palaces.find(p => p.daxianIndex === (selectedDecade.value as number));
     startAge = p ? p.daxianStart : 1;
+  } else {
+    const first = chart.value.palaces.find(p => p.daxianIndex === 0);
+    startAge = first ? first.daxianStart : chart.value.起运Age;
   }
   const list: Array<{ year: number; age: number; ganzhi: string }> = [];
   for (let age = startAge; age < startAge + 10; age++) {
@@ -339,7 +343,6 @@ onMounted(() => {
 }
 
 .palace { background: white; padding: 4px 5px; display: flex; flex-direction: column; overflow: hidden; cursor: pointer; }
-.palace.ming { background: #fff1f5; }
 .palace.sf { background: #fee2e2; }
 .palace.active { background: #ede9fe; }
 .palace > div { flex: 1; display: flex; flex-direction: column; }

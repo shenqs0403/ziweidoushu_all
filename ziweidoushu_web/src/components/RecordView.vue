@@ -93,6 +93,7 @@ function clickDecade(d: { index: number; start: number; label: string }) {
 }
 
 function clickYear(l: { year: number; age: number; ganzhi: string }) {
+  if (selectedDecade.value === null) return;
   selectedYear.value = { ...l };
   selectedBranch.value = null;
   selectedMonth.value = null;
@@ -101,19 +102,27 @@ function clickYear(l: { year: number; age: number; ganzhi: string }) {
 }
 
 function clickMonth(m: { m: number; leap: boolean; label: string; dayCount: number } | null) {
+  if (!selectedYear.value) return;
   selectedMonth.value = m ? { ...m } : null;
   selectedDay.value = null;
   selectedHour.value = null;
 }
 
 function clickDay(d: number) {
+  if (!selectedMonth.value) return;
   selectedDay.value = d;
   selectedHour.value = null;
 }
 
 function clickHour(h: number) {
+  if (selectedDay.value === null) return;
   selectedHour.value = h;
 }
+
+const canClickYear = () => selectedDecade.value !== null;
+const canClickMonth = () => selectedYear.value !== null;
+const canClickDay = () => selectedMonth.value !== null;
+const canClickHour = () => selectedDay.value !== null;
 
 // 流年斗君：太岁宫起正月，逆至出生月；落宫起子时，顺至出生时即为斗君宫
 const douJunBranchIdx = computed<number | null>(() => {
@@ -416,7 +425,7 @@ onMounted(() => {
         <div class="limit-row liunian-row">
           <span class="lb-title">流年</span>
           <div class="lt-cells" @mousedown="enableDragScroll" @click.capture="swallowDragClick">
-            <span v-for="l in liunianPreview" :key="'ln' + l.year" class="lt-cell" :class="{ sel: selectedYear && selectedYear.year === l.year && selectedYear.age === l.age }" @click="clickYear(l)">
+            <span v-for="l in liunianPreview" :key="'ln' + l.year" class="lt-cell" :class="{ sel: selectedYear && selectedYear.year === l.year && selectedYear.age === l.age, disabled: !canClickYear() }" @click="clickYear(l)">
               <span class="lt-gz">{{ l.year }}</span>
               <span class="lt-age">{{ l.age }}岁</span>
             </span>
@@ -425,7 +434,7 @@ onMounted(() => {
         <div class="limit-row liuyue-row">
           <span class="lb-title">流月</span>
           <div class="lt-cells" @mousedown="enableDragScroll" @click.capture="swallowDragClick">
-            <span class="lt-cell" v-for="m in liuyueList" :key="m.key" :class="{ sel: m.obj !== null && selectedMonth !== null && selectedMonth.m === m.m && selectedMonth.leap === m.leap }" @click="clickMonth(m.obj === null ? null : { m: m.m, leap: m.leap, label: m.label, dayCount: m.dayCount })">
+            <span class="lt-cell" v-for="m in liuyueList" :key="m.key" :class="{ sel: m.obj !== null && selectedMonth !== null && selectedMonth.m === m.m && selectedMonth.leap === m.leap, disabled: !canClickMonth() }" @click="clickMonth(m.obj === null ? null : { m: m.m, leap: m.leap, label: m.label, dayCount: m.dayCount })">
               <span class="lt-age">{{ m.label }}</span>
             </span>
           </div>
@@ -433,7 +442,7 @@ onMounted(() => {
         <div class="limit-row liuri-row">
           <span class="lb-title">流日</span>
           <div class="lt-cells" @mousedown="enableDragScroll" @click.capture="swallowDragClick">
-            <span class="lt-cell" v-for="d in monthDayCount" :key="'d' + d" :class="{ sel: selectedDay === d }" @click="clickDay(d)">
+            <span class="lt-cell" v-for="d in monthDayCount" :key="'d' + d" :class="{ sel: selectedDay === d, disabled: !canClickDay() }" @click="clickDay(d)">
               <span class="lt-age">{{ DAY_NAMES[d-1] }}</span>
             </span>
           </div>
@@ -441,7 +450,7 @@ onMounted(() => {
         <div class="limit-row liushi-row">
           <span class="lb-title">流时</span>
           <div class="lt-cells" @mousedown="enableDragScroll" @click.capture="swallowDragClick">
-            <span class="lt-cell" v-for="h in 12" :key="'h' + h" :class="{ sel: selectedHour === h - 1 }" @click="clickHour(h - 1)">
+            <span class="lt-cell" v-for="h in 12" :key="'h' + h" :class="{ sel: selectedHour === h - 1, disabled: !canClickHour() }" @click="clickHour(h - 1)">
               <span class="lt-age">{{ HOUR_NAMES[h-1] }}</span>
             </span>
           </div>
@@ -558,6 +567,7 @@ onMounted(() => {
 }
 .lt-cell { min-width: 56px; flex: 1; text-align: center; display: flex; flex-direction: column; justify-content: center; border-right: 1px dashed #f3f4f6; padding: 1px 2px; cursor: pointer; }
 .lt-cell.sel { background: #ede9fe; border-radius: 4px; }
+.lt-cell.disabled { opacity: 0.4; cursor: not-allowed; }
 .level-label { text-align: right; font-size: 10px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
 .foot-zone { margin-top: auto; }
 .cell-foot { display: flex; align-items: flex-end; gap: 4px; border-top: 1px dashed #e5e7eb; padding-top: 3px; }

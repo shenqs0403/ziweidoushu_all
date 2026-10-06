@@ -67,7 +67,7 @@ const 童限End = computed(() => (chart.value ? chart.value.起运Age - 1 : 0));
 const selectedBranch = ref<number | null>(null);
 const selectedDecade = ref<number | null>(null);
 const selectedYear = ref<{ year: number; age: number; ganzhi: string } | null>(null);
-const selectedMonth = ref<any>(null); // LunarMonth
+const selectedMonth = ref<{ m: number; leap: boolean; label: string; dayCount: number } | null>(null);
 const selectedDay = ref<number | null>(null);
 const selectedHour = ref<number | null>(null);
 
@@ -100,8 +100,8 @@ function clickYear(l: { year: number; age: number; ganzhi: string }) {
   selectedHour.value = null;
 }
 
-function clickMonth(m: any) {
-  selectedMonth.value = m;
+function clickMonth(m: { m: number; leap: boolean; label: string; dayCount: number } | null) {
+  selectedMonth.value = m ? { ...m } : null;
   selectedDay.value = null;
   selectedHour.value = null;
 }
@@ -132,8 +132,8 @@ const activeBranch = computed<number | null>(() => {
   if (selectedYear.value) {
     // 选了流月（及后续日/时）→ 以斗君宫为正月起点
     if (selectedMonth.value !== null && douJunBranchIdx.value !== null) {
-      const mNum = Math.abs(selectedMonth.value.getMonth());
-      let mFor = selectedMonth.value.getMonth() > 0 ? mNum : (selectedDay.value !== null && selectedDay.value <= 15 ? mNum : mNum + 1);
+      const mNum = Math.abs(selectedMonth.value.m);
+      let mFor = selectedMonth.value.m > 0 ? mNum : (selectedDay.value !== null && selectedDay.value <= 15 ? mNum : mNum + 1);
       let b = pad12(douJunBranchIdx.value + (mFor - 1));
       if (selectedDay.value !== null) b = pad12(b + (selectedDay.value - 1));
       if (selectedHour.value !== null) b = pad12(b + selectedHour.value);
@@ -201,12 +201,12 @@ function starLevelChips(starName: string): Array<{ text: string; color: string }
     const yStem = stemIndex(selectedYear.value.ganzhi[0]);
     pushIf(LEVEL_COLORS.年, yStem);
     if (selectedMonth.value !== null && yStem >= 0) {
-      const monthStem = (YIN_STEM_START[yStem] + (Math.abs(selectedMonth.value.getMonth()) - 1)) % 10;
+      const monthStem = (YIN_STEM_START[yStem] + (Math.abs(selectedMonth.value.m) - 1)) % 10;
       pushIf(LEVEL_COLORS.月, monthStem);
     }
     if (selectedMonth.value !== null && selectedDay.value !== null) {
       try {
-        const lunar = Lunar.fromYmd(selectedYear.value.year, selectedMonth.value.getMonth(), selectedDay.value);
+        const lunar = Lunar.fromYmd(selectedYear.value.year, selectedMonth.value.m, selectedDay.value);
         const dStem = stemIndex(lunar.getDayInGanZhi()[0]);
         pushIf(LEVEL_COLORS.日, dStem);
         if (selectedHour.value !== null && dStem >= 0) {
@@ -247,7 +247,7 @@ const LUNAR_MONTH_NAMES = ['正月','二月','三月','四月','五月','六月'
 // 选中流年后，流月显示该农历年的实际月份（含闰月）
 const liuyueList = computed(() => {
   if (!selectedYear.value) {
-    return LUNAR_MONTH_NAMES.map((name, i) => ({ key: 'd' + i, obj: null as any, label: name }));
+    return LUNAR_MONTH_NAMES.map((name, i) => ({ key: 'd' + i, m: i + 1, leap: false, label: name, dayCount: 30, obj: null as any }));
   }
   try {
     const months = LunarYear.fromYear(selectedYear.value.year).getMonths() as any[];
@@ -255,11 +255,14 @@ const liuyueList = computed(() => {
       .filter(m => m.getYear() === selectedYear.value!.year)
       .map(m => ({
         key: (m.isLeap() ? 'L' : '') + m.getMonth(),
-        obj: m,
+        m: m.getMonth(),
+        leap: m.isLeap(),
         label: (m.isLeap() ? '闰' : '') + LUNAR_MONTH_NAMES[Math.abs(m.getMonth()) - 1],
+        dayCount: m.getDayCount(),
+        obj: m,
       }));
   } catch {
-    return LUNAR_MONTH_NAMES.map((name, i) => ({ key: 'd' + i, obj: null as any, label: name }));
+    return LUNAR_MONTH_NAMES.map((name, i) => ({ key: 'd' + i, m: i + 1, leap: false, label: name, dayCount: 30, obj: null as any }));
   }
 });
 
@@ -267,9 +270,40 @@ const liuyueList = computed(() => {
 const monthDayCount = computed(() => {
   if (!selectedYear.value || !selectedMonth.value) return 30;
   try {
-    return selectedMonth.value.getDayCount() || 30;
+    return selectedMonth.value.dayCount || 30;
   } catch { return 30; }
 });
+
+function enableDragScroll(ev: MouseEvent) {
+  const el = ev.currentTarget as HTMLElement;
+  const startX = ev.pageX;
+  const startScroll = el.scrollLeft;
+  let moved = false;
+  function onMove(e: MouseEvent) {
+    const dx = e.pageX - startX;
+    if (Math.abs(dx) > 4) moved = true;
+    el.scrollLeft = startScroll - dx;
+  }
+  function onUp() {
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onUp);
+    if (moved) {
+      el.dataset.dragged = '1';
+      setTimeout(() => { delete el.dataset.dragged; }, 0);
+    }
+  }
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onUp);
+}
+
+// 拖拽滚动后吞掉一次点击，防止误选
+function swallowDragClick(ev: MouseEvent) {
+  const el = ev.currentTarget as HTMLElement;
+  if (el.dataset.dragged === '1') {
+    ev.stopPropagation();
+    ev.preventDefault();
+  }
+}
 
 function goBack() { window.location.hash = '#/'; }
 onMounted(() => {
@@ -363,7 +397,7 @@ onMounted(() => {
       <div class="limit-block">
         <div class="limit-row daxian-row">
           <span class="lb-title">大限</span>
-          <div class="lt-cells">
+          <div class="lt-cells" @mousedown="enableDragScroll" @click.capture="swallowDragClick">
             <span v-for="d in daxianPreview" :key="'dx' + d.index" class="lt-cell" :class="{ sel: selectedDecade === d.index }" @click="clickDecade(d)">
               <span class="lt-age">{{ d.start }}-{{ d.start + 9 }}</span>
             </span>
@@ -374,7 +408,7 @@ onMounted(() => {
         </div>
         <div class="limit-row liunian-row">
           <span class="lb-title">流年</span>
-          <div class="lt-cells">
+          <div class="lt-cells" @mousedown="enableDragScroll" @click.capture="swallowDragClick">
             <span v-for="l in liunianPreview" :key="'ln' + l.year" class="lt-cell" :class="{ sel: selectedYear && selectedYear.year === l.year && selectedYear.age === l.age }" @click="clickYear(l)">
               <span class="lt-gz">{{ l.year }}</span>
               <span class="lt-age">{{ l.age }}岁</span>
@@ -383,15 +417,15 @@ onMounted(() => {
         </div>
         <div class="limit-row liuyue-row">
           <span class="lb-title">流月</span>
-          <div class="lt-cells">
-            <span class="lt-cell" v-for="m in liuyueList" :key="m.key" :class="{ sel: m.obj !== null && selectedMonth === m.obj }" @click="clickMonth(m.obj)">
+          <div class="lt-cells" @mousedown="enableDragScroll" @click.capture="swallowDragClick">
+            <span class="lt-cell" v-for="m in liuyueList" :key="m.key" :class="{ sel: m.obj !== null && selectedMonth !== null && selectedMonth.m === m.m && selectedMonth.leap === m.leap }" @click="clickMonth(m.obj === null ? null : { m: m.m, leap: m.leap, label: m.label, dayCount: m.dayCount })">
               <span class="lt-age">{{ m.label }}</span>
             </span>
           </div>
         </div>
         <div class="limit-row liuri-row">
           <span class="lb-title">流日</span>
-          <div class="lt-cells">
+          <div class="lt-cells" @mousedown="enableDragScroll" @click.capture="swallowDragClick">
             <span class="lt-cell" v-for="d in monthDayCount" :key="'d' + d" :class="{ sel: selectedDay === d }" @click="clickDay(d)">
               <span class="lt-age">{{ DAY_NAMES[d-1] }}</span>
             </span>
@@ -399,7 +433,7 @@ onMounted(() => {
         </div>
         <div class="limit-row liushi-row">
           <span class="lb-title">流时</span>
-          <div class="lt-cells">
+          <div class="lt-cells" @mousedown="enableDragScroll" @click.capture="swallowDragClick">
             <span class="lt-cell" v-for="h in 12" :key="'h' + h" :class="{ sel: selectedHour === h - 1 }" @click="clickHour(h - 1)">
               <span class="lt-age">{{ HOUR_NAMES[h-1] }}</span>
             </span>
@@ -508,12 +542,13 @@ onMounted(() => {
   padding: 8px 4px; display: flex; flex-direction: column; gap: 6px;
 }
 .limit-row { display: flex; gap: 4px; align-items: stretch; }
-.lt-cells { display: flex; gap: 4px; overflow-x: auto; flex: 1; }
+.lt-cells { display: flex; gap: 4px; overflow-x: auto; flex: 1; cursor: grab; user-select: none; }
+.lt-cells:active { cursor: grabbing; }
 .lb-title {
   min-width: 42px; text-align: center; background: #ede9fe; color: #6d28d9; font-size: 12px;
   border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 4px 0;
 }
-.lt-cell { min-width: 56px; flex: 1; text-align: center; display: flex; flex-direction: column; border-right: 1px dashed #f3f4f6; padding: 0 2px; cursor: pointer; }
+.lt-cell { min-width: 56px; flex: 1; text-align: center; display: flex; flex-direction: column; justify-content: center; border-right: 1px dashed #f3f4f6; padding: 1px 2px; cursor: pointer; }
 .lt-cell.sel { background: #ede9fe; border-radius: 4px; }
 .level-label { text-align: right; font-size: 10px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
 .foot-zone { margin-top: auto; }

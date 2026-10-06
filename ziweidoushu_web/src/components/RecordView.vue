@@ -133,20 +133,24 @@ const sfBranches = computed(() => {
   return new Set<number>([pad12(a), pad12(a + 4), pad12(a + 8), pad12(a + 6)].filter(b => b !== a));
 });
 
-// 宫名上的前缀标签：限/年/月/日/时
-const labelPrefix = computed(() => {
-  if (selectedHour.value !== null) return '时';
-  if (selectedDay.value !== null) return '日';
-  if (selectedMonth.value !== null) return '月';
-  if (selectedYear.value) return '年';
-  if (selectedDecade.value !== null) return '限';
-  return '';
-});
+// 宫名上方的层级标签（大限、流年、流月、流日、流时，从下往上堆叠）
+const LEVEL_COLORS: Record<string, string> = {
+  限: '#1f2937',
+  年: '#2563eb',
+  月: '#7c3aed',
+  日: '#0891b2',
+  时: '#ea580c',
+};
 
-function palaceLevelLabel(name: string): string {
-  if (!labelPrefix.value) return '';
+function palaceLevelLabels(name: string): Array<{ text: string; color: string }> {
   const short = name === '命宫' ? '命' : name.charAt(0);
-  return labelPrefix.value + short;
+  const out: Array<{ text: string; color: string }> = [];
+  if (selectedHour.value !== null) out.push({ text: '时' + short, color: LEVEL_COLORS.时 });
+  if (selectedDay.value !== null) out.push({ text: '日' + short, color: LEVEL_COLORS.日 });
+  if (selectedMonth.value !== null) out.push({ text: '月' + short, color: LEVEL_COLORS.月 });
+  if (selectedYear.value) out.push({ text: '年' + short, color: LEVEL_COLORS.年 });
+  if (selectedDecade.value !== null) out.push({ text: '限' + short, color: LEVEL_COLORS.限 });
+  return out;
 }
 
 // 流年列表（选中大限后显示该大限对应的十年）
@@ -230,7 +234,12 @@ onMounted(() => {
                 <span class="gz">{{ palaceAt(branchIndex)!.stemBranch }}</span>
                 <span class="age">{{ palaceAt(branchIndex)!.daxianStart }}-{{ palaceAt(branchIndex)!.daxianStart + 9 }}</span>
                 <span class="foot-right">
-                  <span class="level-label" v-if="labelPrefix">{{ palaceLevelLabel(palaceAt(branchIndex)!.name) }}</span>
+                  <span
+                    v-for="lbl in palaceLevelLabels(palaceAt(branchIndex)!.name)"
+                    :key="lbl.text"
+                    class="level-label"
+                    :style="{ color: lbl.color }"
+                  >{{ lbl.text }}</span>
                   <span class="pname">{{ palaceAt(branchIndex)!.name === '命宫' ? '命宫' : palaceAt(branchIndex)!.name }}</span>
                 </span>
               </div>
@@ -410,7 +419,7 @@ onMounted(() => {
 }
 .lt-cell { min-width: 56px; flex: 1; text-align: center; display: flex; flex-direction: column; border-right: 1px dashed #f3f4f6; padding: 0 2px; cursor: pointer; }
 .lt-cell.sel { background: #ede9fe; border-radius: 4px; }
-.level-label { font-size: 10px; font-weight: 700; color: #ef4444; line-height: 1.2; white-space: nowrap; }
+.level-label { text-align: right; font-size: 10px; font-weight: 700; color: #ef4444; line-height: 1.2; white-space: nowrap; margin-bottom: 2px; }
 .lt-age { font-size: 12px; font-weight: 700; color: #111; }
 .lt-gz { font-size: 11px; color: #6b7280; }
 

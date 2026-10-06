@@ -234,12 +234,14 @@ onMounted(() => {
                 <span class="gz">{{ palaceAt(branchIndex)!.stemBranch }}</span>
                 <span class="age">{{ palaceAt(branchIndex)!.daxianStart }}-{{ palaceAt(branchIndex)!.daxianStart + 9 }}</span>
                 <span class="foot-right">
-                  <span
-                    v-for="lbl in palaceLevelLabels(palaceAt(branchIndex)!.name)"
-                    :key="lbl.text"
-                    class="level-label"
-                    :style="{ color: lbl.color }"
-                  >{{ lbl.text }}</span>
+                  <span class="level-stack">
+                    <span
+                      v-for="lbl in palaceLevelLabels(palaceAt(branchIndex)!.name)"
+                      :key="lbl.text"
+                      class="level-label"
+                      :style="{ color: lbl.color }"
+                    >{{ lbl.text }}</span>
+                  </span>
                   <span class="pname">{{ palaceAt(branchIndex)!.name === '命宫' ? '命宫' : palaceAt(branchIndex)!.name }}</span>
                 </span>
               </div>
@@ -276,40 +278,48 @@ onMounted(() => {
       <div class="limit-block">
         <div class="limit-row daxian-row">
           <span class="lb-title">大限</span>
-          <span v-for="d in daxianPreview" :key="'dx' + d.index" class="lt-cell" :class="{ sel: selectedDecade === d.index }" @click="clickDecade(d)">
-            <span class="lt-age">{{ d.start }}-{{ d.start + 9 }}</span>
-            <span class="lt-gz">{{ d.label }}</span>
-          </span>
-          <span class="lt-cell">
-            <span class="lt-age">1-{{ 童限End }}</span>
-            <span class="lt-gz">起限前(童限)</span>
-          </span>
+          <div class="lt-cells">
+            <span v-for="d in daxianPreview" :key="'dx' + d.index" class="lt-cell" :class="{ sel: selectedDecade === d.index }" @click="clickDecade(d)">
+              <span class="lt-age">{{ d.start }}-{{ d.start + 9 }}</span>
+            </span>
+            <span class="lt-cell">
+              <span class="lt-age">1-{{ 童限End }}</span>
+              <span class="lt-gz">起限前(童限)</span>
+            </span>
+          </div>
         </div>
         <div class="limit-row liunian-row">
           <span class="lb-title">流年</span>
-          <span v-for="l in liunianPreview" :key="'ln' + l.year" class="lt-cell" :class="{ sel: selectedYear && selectedYear.year === l.year && selectedYear.age === l.age }" @click="clickYear(l)">
-            <span class="lt-gz">{{ l.year }}</span>
-            <span class="lt-age">{{ l.age }}岁</span>
-            <span class="lt-gz">{{ l.ganzhi }}</span>
-          </span>
+          <div class="lt-cells">
+            <span v-for="l in liunianPreview" :key="'ln' + l.year" class="lt-cell" :class="{ sel: selectedYear && selectedYear.year === l.year && selectedYear.age === l.age }" @click="clickYear(l)">
+              <span class="lt-gz">{{ l.year }}</span>
+              <span class="lt-age">{{ l.age }}岁</span>
+            </span>
+          </div>
         </div>
         <div class="limit-row liuyue-row">
           <span class="lb-title">流月</span>
-          <span class="lt-cell" v-for="m in 12" :key="'m' + m" :class="{ sel: selectedMonth === m }" @click="clickMonth(m)">
-            <span class="lt-age">{{ ['正','二','三','四','五','六','七','八','九','十','冬','腊'][m-1] }}月</span>
-          </span>
+          <div class="lt-cells">
+            <span class="lt-cell" v-for="m in 12" :key="'m' + m" :class="{ sel: selectedMonth === m }" @click="clickMonth(m)">
+              <span class="lt-age">{{ ['正','二','三','四','五','六','七','八','九','十','冬','腊'][m-1] }}月</span>
+            </span>
+          </div>
         </div>
         <div class="limit-row liuri-row">
           <span class="lb-title">流日</span>
-          <span class="lt-cell" v-for="d in monthDayCount" :key="'d' + d" :class="{ sel: selectedDay === d }" @click="clickDay(d)">
-            <span class="lt-age">{{ DAY_NAMES[d-1] }}</span>
-          </span>
+          <div class="lt-cells">
+            <span class="lt-cell" v-for="d in monthDayCount" :key="'d' + d" :class="{ sel: selectedDay === d }" @click="clickDay(d)">
+              <span class="lt-age">{{ DAY_NAMES[d-1] }}</span>
+            </span>
+          </div>
         </div>
         <div class="limit-row liushi-row">
           <span class="lb-title">流时</span>
-          <span class="lt-cell" v-for="h in 12" :key="'h' + h" :class="{ sel: selectedHour === h - 1 }" @click="clickHour(h - 1)">
-            <span class="lt-age">{{ HOUR_NAMES[h-1] }}</span>
-          </span>
+          <div class="lt-cells">
+            <span class="lt-cell" v-for="h in 12" :key="'h' + h" :class="{ sel: selectedHour === h - 1 }" @click="clickHour(h - 1)">
+              <span class="lt-age">{{ HOUR_NAMES[h-1] }}</span>
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -389,6 +399,7 @@ onMounted(() => {
 .age { flex: 2; text-align: center; font-size: 10px; font-weight: 400; color: #4b5563; }
 .pname { font-size: 10px; font-weight: 700; color: #ef4444; }
 .foot-right { flex: 1; display: flex; flex-direction: column; align-items: flex-end; }
+.level-stack { width: 100%; height: 60px; overflow: hidden; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; }
 
 .center {
   grid-row: 2 / 4; grid-column: 2 / 4;
@@ -412,14 +423,15 @@ onMounted(() => {
   margin-top: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 8px;
   padding: 8px 4px; display: flex; flex-direction: column; gap: 6px;
 }
-.limit-row { display: flex; gap: 4px; align-items: stretch; overflow-x: auto; }
+.limit-row { display: flex; gap: 4px; align-items: stretch; }
+.lt-cells { display: flex; gap: 4px; overflow-x: auto; flex: 1; }
 .lb-title {
   min-width: 42px; text-align: center; background: #ede9fe; color: #6d28d9; font-size: 12px;
   border-radius: 6px; display: flex; align-items: center; justify-content: center; padding: 4px 0;
 }
 .lt-cell { min-width: 56px; flex: 1; text-align: center; display: flex; flex-direction: column; border-right: 1px dashed #f3f4f6; padding: 0 2px; cursor: pointer; }
 .lt-cell.sel { background: #ede9fe; border-radius: 4px; }
-.level-label { text-align: right; font-size: 10px; font-weight: 700; color: #ef4444; line-height: 1.2; white-space: nowrap; margin-bottom: 2px; }
+.level-label { text-align: right; font-size: 10px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
 .lt-age { font-size: 12px; font-weight: 700; color: #111; }
 .lt-gz { font-size: 11px; color: #6b7280; }
 

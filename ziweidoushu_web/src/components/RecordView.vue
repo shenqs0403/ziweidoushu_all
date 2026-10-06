@@ -368,7 +368,7 @@ onMounted(() => {
                 <div class="cell-foot">
                   <span class="gz">{{ palaceAt(branchIndex)!.stemBranch }}</span>
                   <span class="age">{{ palaceAt(branchIndex)!.daxianStart }}-{{ palaceAt(branchIndex)!.daxianStart + 9 }}</span>
-                  <span class="pname">{{ palaceAt(branchIndex)!.name === '命宫' ? '命宫' : palaceAt(branchIndex)!.name }}</span>
+                  <span class="pname">{{ (palaceAt(branchIndex)!.branch === chart.bodyPalaceBranch ? '身|' : '') }}{{ palaceAt(branchIndex)!.name === '命宫' ? '命宫' : palaceAt(branchIndex)!.name }}</span>
                 </div>
           </div>
             </div>

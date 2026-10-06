@@ -172,28 +172,28 @@ const levelHuaMap = computed(() => {
   // 年干→正月天干；正月干 = 寅首天干
   const YIN_STEM_START: Record<number, number> = { 0: 2, 5: 2, 1: 4, 6: 4, 2: 6, 7: 6, 3: 8, 8: 8, 4: 0, 9: 0 };
 
-  const addLevel = (abbr: string, color: string, yStemIdx: number | null) => {
+  const addLevel = (color: string, yStemIdx: number | null) => {
     if (yStemIdx === null || !chart.value) return;
     const huaMap = HUA_BY_YEAR[yStemIdx];
     for (const [type, starName] of Object.entries(huaMap) as Array<['禄' | '权' | '科' | '忌', string]>) {
       const palace = chart.value.palaces.find(p => p.stars.some(s => s.name === starName));
-      if (palace) push(palace.branchIndex, abbr + type, color);
+      if (palace) push(palace.branchIndex, type, color);
     }
   };
 
   // 大限：选中的大限盘命宫天干
   if (selectedDecade.value !== null && chart.value) {
     const p = chart.value.palaces.find(p => p.daxianIndex === (selectedDecade.value as number));
-    if (p) addLevel('限', LEVEL_COLORS.限, stemIndex(p.stemBranch[0]));
+    if (p) addLevel(LEVEL_COLORS.限, stemIndex(p.stemBranch[0]));
   }
   // 流年：选中年份的天干
-  if (selectedYear.value) addLevel('年', LEVEL_COLORS.年, stemIndex(selectedYear.value.ganzhi[0]));
+  if (selectedYear.value) addLevel(LEVEL_COLORS.年, stemIndex(selectedYear.value.ganzhi[0]));
   // 流月：年→正月干→生水月干
   if (selectedYear.value && selectedMonth.value !== null) {
     const yStem = stemIndex(selectedYear.value.ganzhi[0]);
     if (yStem >= 0) {
       const monthStem = (YIN_STEM_START[yStem] + (selectedMonth.value - 1)) % 10;
-      addLevel('月', LEVEL_COLORS.月, monthStem);
+      addLevel(LEVEL_COLORS.月, monthStem);
     }
   }
   // 流日 / 流时：选中年+月+日，按农历日干支
@@ -202,11 +202,11 @@ const levelHuaMap = computed(() => {
       const lunar = Lunar.fromYmd(selectedYear.value.year, selectedMonth.value, selectedDay.value);
       const dStem = stemIndex(lunar.getDayInGanZhi()[0]);
       if (dStem >= 0) {
-        addLevel('日', LEVEL_COLORS.日, dStem);
+        addLevel(LEVEL_COLORS.日, dStem);
         if (selectedHour.value !== null) {
           const ziStem: Record<number, number> = { 0: 0, 5: 0, 1: 2, 6: 2, 2: 4, 7: 4, 3: 6, 8: 6, 4: 8, 9: 8 };
           const hourStem = (ziStem[dStem] + selectedHour.value) % 10;
-          addLevel('时', LEVEL_COLORS.时, hourStem);
+          addLevel(LEVEL_COLORS.时, hourStem);
         }
       }
     } catch { /* ignore */ }
@@ -296,7 +296,7 @@ onMounted(() => {
                 </div>
               </div>
               <div class="level-hua">
-                <span v-for="chip in levelHuaAt(branchIndex)" :key="chip.text" class="lhua" :style="{ background: chip.color }">{{ chip.text }}</span>
+                <span v-for="chip in levelHuaAt(branchIndex)" :key="chip.text + chip.color" class="lhua" :style="{ background: chip.color }">{{ chip.text }}</span>
               </div>
               <div class="cell-foot">
                 <span class="gz">{{ palaceAt(branchIndex)!.stemBranch }}</span>

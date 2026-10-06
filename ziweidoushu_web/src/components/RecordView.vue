@@ -549,7 +549,8 @@ onMounted(() => {
   padding: 8px 4px; display: flex; flex-direction: column; gap: 6px;
 }
 .limit-row { display: flex; gap: 4px; align-items: stretch; }
-.lt-cells { display: flex; gap: 4px; overflow-x: auto; flex: 1; cursor: grab; user-select: none; }
+.lt-cells { display: flex; gap: 4px; overflow-x: auto; flex: 1; cursor: grab; user-select: none; scrollbar-width: none; }
+.lt-cells::-webkit-scrollbar { display: none; }
 .lt-cells:active { cursor: grabbing; }
 .lb-title {
   min-width: 42px; text-align: center; background: #ede9fe; color: #6d28d9; font-size: 12px;

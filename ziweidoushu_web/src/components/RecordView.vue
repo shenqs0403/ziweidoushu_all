@@ -115,13 +115,30 @@ function clickHour(h: number) {
   selectedHour.value = h;
 }
 
-// 当前生效被选中的宫位 branchIndex（传统顺法：流年命宫→流月命宫→流日命宫→流时命宫，均顺行一路）
+// 流年斗君：太岁宫起正月，逆至出生月；落宫起子时，顺至出生时即为斗君宫
+const douJunBranchIdx = computed<number | null>(() => {
+  if (!chart.value || !record.value || !selectedYear.value) return null;
+  const ganzhi = selectedYear.value.ganzhi;
+  const taiSui = BRANCHES.indexOf(ganzhi[1]);
+  if (taiSui < 0) return null;
+  const birthMonthIdx = Math.abs(record.value.birthMonth);
+  return pad12(taiSui - (birthMonthIdx - 1) + record.value.birthHour);
+});
+
+// 当前生效被选中的宫位 branchIndex（流月命宫用斗君推法，日/时命宫顺行承接）
 const activeBranch = computed<number | null>(() => {
   if (!chart.value) return null;
   const ming = mingBranch();
   if (selectedYear.value) {
-    let b = pad12(ming + selectedYear.value.age - 1);
-    if (selectedMonth.value !== null) b = pad12(b + (selectedMonth.value - 1));
+    // 选了流月（及后续日/时）→ 以斗君宫为正月起点
+    if (selectedMonth.value !== null && douJunBranchIdx.value !== null) {
+      let b = pad12(douJunBranchIdx.value + (selectedMonth.value - 1));
+      if (selectedDay.value !== null) b = pad12(b + (selectedDay.value - 1));
+      if (selectedHour.value !== null) b = pad12(b + selectedHour.value);
+      return b;
+    }
+    // 只选了流年→ 年命宫
+    let b = pad12(ming + (selectedYear.value.age - 1));
     if (selectedDay.value !== null) b = pad12(b + (selectedDay.value - 1));
     if (selectedHour.value !== null) b = pad12(b + selectedHour.value);
     return b;

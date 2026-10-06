@@ -121,7 +121,14 @@ const douJunBranchIdx = computed<number | null>(() => {
   const ganzhi = selectedYear.value.ganzhi;
   const taiSui = BRANCHES.indexOf(ganzhi[1]);
   if (taiSui < 0) return null;
-  const birthMonthIdx = Math.abs(record.value.birthMonth);
+  // 出生月份用农历月数
+  let birthMonthIdx = Math.abs(record.value.birthMonth);
+  if (!record.value.isLunar) {
+    try {
+      const lunar = Solar.fromYmd(record.value.birthYear, record.value.birthMonth, Math.min(record.value.birthDay, 28)).getLunar();
+      birthMonthIdx = Math.abs(lunar.getMonth());
+    } catch { /* fallback */ }
+  }
   return pad12(taiSui - (birthMonthIdx - 1) + record.value.birthHour);
 });
 
@@ -535,7 +542,7 @@ onMounted(() => {
 .hua-tip { font-size: 11px; color: #374151; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
 .hua-tip .hua { vertical-align: middle; }
 .swatch { display: inline-block; width: 12px; height: 8px; border-radius: 2px; margin-right: 3px; vertical-align: middle; }
-.swatch-label { font-weight: 600; color: #374151; margin-right: 8px; font-size: 11px; }
+.swatch-label { font-weight: 600; color: #374151; margin-right: 0px; font-size: 11px; }
 
 .limit-block {
   margin-top: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 8px;

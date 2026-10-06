@@ -295,24 +295,26 @@ onMounted(() => {
                   <span v-if="star.hua" class="hua" :class="`hua-${star.hua}`">{{ star.hua }}</span>
                 </div>
               </div>
-              <div class="level-hua">
-                <span v-for="chip in levelHuaAt(branchIndex)" :key="chip.text + chip.color" class="lhua" :style="{ background: chip.color }">{{ chip.text }}</span>
-              </div>
-              <div class="cell-foot">
-                <span class="gz">{{ palaceAt(branchIndex)!.stemBranch }}</span>
-                <span class="age">{{ palaceAt(branchIndex)!.daxianStart }}-{{ palaceAt(branchIndex)!.daxianStart + 9 }}</span>
-                <span class="foot-right">
-                  <span class="level-stack">
-                    <span
-                      v-for="lbl in palaceLevelLabels(palaceAt(branchIndex)!.name)"
-                      :key="lbl.text"
-                      class="level-label"
-                      :style="{ color: lbl.color }"
-                    >{{ lbl.text }}</span>
+              <div class="foot-zone">
+                <div class="level-hua">
+                  <span v-for="chip in levelHuaAt(branchIndex)" :key="chip.text + chip.color" class="lhua" :style="{ background: chip.color }">{{ chip.text }}</span>
+                </div>
+                <div class="cell-foot">
+                  <span class="gz">{{ palaceAt(branchIndex)!.stemBranch }}</span>
+                  <span class="age">{{ palaceAt(branchIndex)!.daxianStart }}-{{ palaceAt(branchIndex)!.daxianStart + 9 }}</span>
+                  <span class="foot-right">
+                    <span class="level-stack">
+                      <span
+                        v-for="lbl in palaceLevelLabels(palaceAt(branchIndex)!.name)"
+                        :key="lbl.text"
+                        class="level-label"
+                        :style="{ color: lbl.color }"
+                      >{{ lbl.text }}</span>
+                    </span>
+                    <span class="pname">{{ palaceAt(branchIndex)!.name === '命宫' ? '命宫' : palaceAt(branchIndex)!.name }}</span>
                   </span>
-                  <span class="pname">{{ palaceAt(branchIndex)!.name === '命宫' ? '命宫' : palaceAt(branchIndex)!.name }}</span>
-                </span>
-              </div>
+                </div>
+          </div>
             </div>
           </div>
           <div v-else-if="idx === 5" class="center">
@@ -461,7 +463,6 @@ onMounted(() => {
 
 .years { font-size: 9px; color: #9ca3af; line-height: 1.5; margin-bottom: 4px; }
 
-.cell-foot { margin-top: auto; display: flex; align-items: flex-end; gap: 4px; border-top: 1px dashed #e5e7eb; padding-top: 3px; }
 .gz { flex: 1; font-size: 10px; font-weight: 400; color: #4b5563; }
 .age { flex: 2; text-align: center; font-size: 10px; font-weight: 400; color: #4b5563; }
 .pname { font-size: 10px; font-weight: 700; color: #ef4444; }
@@ -499,7 +500,9 @@ onMounted(() => {
 .lt-cell { min-width: 56px; flex: 1; text-align: center; display: flex; flex-direction: column; border-right: 1px dashed #f3f4f6; padding: 0 2px; cursor: pointer; }
 .lt-cell.sel { background: #ede9fe; border-radius: 4px; }
 .level-label { text-align: right; font-size: 10px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
-.level-hua { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 2px; }
+.level-hua { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; margin-bottom: 2px; }
+.foot-zone { margin-top: auto; }
+.cell-foot { display: flex; align-items: flex-end; gap: 4px; border-top: 1px dashed #e5e7eb; padding-top: 3px; }
 .lhua { display: inline-block; padding: 0 3px; border-radius: 3px; font-size: 10px; color: #fff; line-height: 1.5; }
 .lt-age { font-size: 12px; font-weight: 700; color: #111; line-height: 1.2; }
 .lt-gz { font-size: 11px; color: #6b7280; line-height: 1.2; }

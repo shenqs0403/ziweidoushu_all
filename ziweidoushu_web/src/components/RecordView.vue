@@ -404,7 +404,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.record-view { padding: 8px; max-width: 1400px; margin: 0 auto; background: #fafafa; min-height: 100vh; }
+.record-view { padding: 8px; max-width: 1400px; margin: 0 auto; background: #fafafa; min-height: max(800px, 100vh); }
 .header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .header .title { font-size: 22px; font-weight: 700; color: #7c3aed; margin: 0; flex: 1; text-align: center; }
 .btn-back { background: none; border: none; color: #111; font-size: 20px; cursor: pointer; }

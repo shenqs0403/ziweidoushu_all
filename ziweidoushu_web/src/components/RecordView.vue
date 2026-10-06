@@ -283,8 +283,7 @@ onMounted(() => {
               <span class="lt-age">{{ d.start }}-{{ d.start + 9 }}</span>
             </span>
             <span class="lt-cell">
-              <span class="lt-age">1-{{ 童限End }}</span>
-              <span class="lt-gz">起限前(童限)</span>
+              <span class="lt-age">童限 1-{{ 童限End }}</span>
             </span>
           </div>
         </div>
@@ -432,8 +431,9 @@ onMounted(() => {
 .lt-cell { min-width: 56px; flex: 1; text-align: center; display: flex; flex-direction: column; border-right: 1px dashed #f3f4f6; padding: 0 2px; cursor: pointer; }
 .lt-cell.sel { background: #ede9fe; border-radius: 4px; }
 .level-label { text-align: right; font-size: 10px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
-.lt-age { font-size: 12px; font-weight: 700; color: #111; }
-.lt-gz { font-size: 11px; color: #6b7280; }
+.lt-age { font-size: 12px; font-weight: 700; color: #111; line-height: 1.2; }
+.lt-gz { font-size: 11px; color: #6b7280; line-height: 1.2; }
+.lt-cell { padding: 1px 2px; }
 
 /* 各层级参数的字体颜色区分 */
 .daxian-row .lt-age, .daxian-row .lt-gz { color: #1f2937; }

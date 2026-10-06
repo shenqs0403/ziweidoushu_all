@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="ziweidoushu_app"
+        android:label="紫微斗数"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

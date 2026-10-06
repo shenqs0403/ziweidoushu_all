@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.linglongopc.ziweidoushu_app"
+    namespace = "com.linglongopc.ziweidoushu.android"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.linglongopc.ziweidoushu_app"
+        applicationId = "com.linglongopc.ziweidoushu.android"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 29  // Android 10 (API 29)

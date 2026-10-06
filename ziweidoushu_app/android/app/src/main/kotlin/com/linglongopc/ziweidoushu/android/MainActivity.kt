@@ -1,4 +1,4 @@
-package com.linglongopc.ziweidoushu_app
+package com.linglongopc.ziweidoushu.android
 
 import io.flutter.embedding.android.FlutterActivity
 

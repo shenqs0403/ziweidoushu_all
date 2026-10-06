@@ -139,8 +139,9 @@ const activeBranch = computed<number | null>(() => {
       if (selectedHour.value !== null) b = pad12(b + selectedHour.value);
       return b;
     }
-    // 只选了流年→ 年命宫
-    let b = pad12(ming + (selectedYear.value.age - 1));
+    // 只选了流年→ 流年命宫取当年地支年对应的宫位
+    let b = BRANCHES.indexOf(selectedYear.value.ganzhi[1]);
+    if (b < 0) b = pad12(ming + (selectedYear.value.age - 1));
     if (selectedDay.value !== null) b = pad12(b + (selectedDay.value - 1));
     if (selectedHour.value !== null) b = pad12(b + selectedHour.value);
     return b;

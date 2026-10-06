@@ -418,10 +418,10 @@ onMounted(() => {
   gap: 2px;
   background: #e5e7eb;
   border: 1px solid #e5e7eb;
-  min-height: 660px;
+  height: 640px;
 }
 
-.palace { background: white; padding: 4px 5px; display: flex; flex-direction: column; overflow: hidden; cursor: pointer; }
+.palace { background: white; padding: 4px 5px; display: flex; flex-direction: column; overflow: visible; cursor: pointer; }
 .palace.sf { background: #fee2e2; }
 .palace.active { background: #ede9fe; }
 .palace > div { flex: 1; display: flex; flex-direction: column; }

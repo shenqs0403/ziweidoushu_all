@@ -283,20 +283,18 @@ onMounted(() => {
                 </div>
               </div>
               <div class="foot-zone">
+                <div class="level-labels-area">
+                  <span
+                    v-for="lbl in palaceLevelLabels(palaceAt(branchIndex)!.name)"
+                    :key="lbl.text"
+                    class="level-label"
+                    :style="{ color: lbl.color }"
+                  >{{ lbl.text }}</span>
+                </div>
                 <div class="cell-foot">
                   <span class="gz">{{ palaceAt(branchIndex)!.stemBranch }}</span>
                   <span class="age">{{ palaceAt(branchIndex)!.daxianStart }}-{{ palaceAt(branchIndex)!.daxianStart + 9 }}</span>
-                  <span class="foot-right">
-                    <span class="level-stack">
-                      <span
-                        v-for="lbl in palaceLevelLabels(palaceAt(branchIndex)!.name)"
-                        :key="lbl.text"
-                        class="level-label"
-                        :style="{ color: lbl.color }"
-                      >{{ lbl.text }}</span>
-                    </span>
-                    <span class="pname">{{ palaceAt(branchIndex)!.name === '命宫' ? '命宫' : palaceAt(branchIndex)!.name }}</span>
-                  </span>
+                  <span class="pname">{{ palaceAt(branchIndex)!.name === '命宫' ? '命宫' : palaceAt(branchIndex)!.name }}</span>
                 </div>
           </div>
             </div>
@@ -450,8 +448,6 @@ onMounted(() => {
 .gz { flex: 1; font-size: 10px; font-weight: 400; color: #4b5563; }
 .age { flex: 2; text-align: center; font-size: 10px; font-weight: 400; color: #4b5563; }
 .pname { font-size: 10px; font-weight: 700; color: #ef4444; }
-.foot-right { flex: 1; display: flex; flex-direction: column; align-items: flex-end; }
-.level-stack { width: 100%; height: 60px; overflow: hidden; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; }
 
 .center {
   grid-row: 2 / 4; grid-column: 2 / 4;
@@ -486,6 +482,7 @@ onMounted(() => {
 .level-label { text-align: right; font-size: 10px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
 .foot-zone { margin-top: auto; }
 .cell-foot { display: flex; align-items: flex-end; gap: 4px; border-top: 1px dashed #e5e7eb; padding-top: 3px; }
+.level-labels-area { height: 60px; overflow: hidden; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; }
 .lt-age { font-size: 12px; font-weight: 700; color: #111; line-height: 1.2; }
 .lt-gz { font-size: 11px; color: #6b7280; line-height: 1.2; }
 .lt-cell { padding: 1px 2px; }

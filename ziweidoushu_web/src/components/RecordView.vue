@@ -274,12 +274,14 @@ onMounted(() => {
                     {{ starBrightness(star.name, branchIndex) }}
                   </span>
                   <span v-if="star.hua" class="hua" :class="`hua-${star.hua}`">{{ star.hua }}</span>
-                  <span
-                    v-for="chip in starLevelChips(star.name)"
-                    :key="chip.text + chip.color"
-                    class="hua level-hua-chip"
-                    :style="{ background: chip.color }"
-                  >{{ chip.text }}</span>
+                  <span class="level-hua-stack" v-if="starLevelChips(star.name).length">
+                    <span
+                      v-for="chip in starLevelChips(star.name)"
+                      :key="chip.text + chip.color"
+                      class="hua level-hua-chip"
+                      :style="{ background: chip.color }"
+                    >{{ chip.text }}</span>
+                  </span>
                 </div>
               </div>
               <div class="foot-zone">
@@ -413,8 +415,8 @@ onMounted(() => {
 /* 命盘网格 */
 .chart-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(4, minmax(0, 1fr));
   gap: 2px;
   background: #e5e7eb;
   border: 1px solid #e5e7eb;
@@ -428,7 +430,8 @@ onMounted(() => {
 
 /* 星曜：同一行排，辅星比主星小、杂耀最小 */
 .stars { display: flex; flex-wrap: wrap; gap: 1px; margin-bottom: 2px; justify-content: flex-start; }
-.star-col { cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 1px 0; }
+.star-col { cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 1px 0; position: relative; }
+.level-hua-stack { position: absolute; top: calc(100% + 1px); left: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; z-index: 3; }
 .star-name { writing-mode: vertical-rl; line-height: 1.2; white-space: nowrap; }
 .star-col.major .star-name { color: #dc2626; font-weight: 700; font-size: 12px; }
 .star-col.support .star-name { color: #7c3aed; font-size: 12px; }

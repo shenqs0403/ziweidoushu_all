@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import type { PersonRecord } from '../types';
 import { loadRecords } from '../utils/storage';
-import { buildChart, BRIGHTNESS, BRANCHES } from '../utils/chart';
+import { buildChart, BRIGHTNESS, BRANCHES, STEMS, HUA_BY_YEAR } from '../utils/chart';
 import { getStarInfo } from '../utils/starInfo';
 import { Solar, Lunar } from 'lunar-javascript';
 
@@ -115,15 +115,22 @@ function clickHour(h: number) {
   selectedHour.value = h;
 }
 
-// 当前生效被选中的宫位 branchIndex
+// 当前生效被选中的宫位 branchIndex（传统顺法：流年命宫→流月命宫→流日命宫→流时命宫，均顺行一路）
 const activeBranch = computed<number | null>(() => {
   if (!chart.value) return null;
-  if (selectedYear.value) return pad12(mingBranch() + selectedYear.value.age - 1);
+  const ming = mingBranch();
+  if (selectedYear.value) {
+    let b = pad12(ming + selectedYear.value.age - 1);
+    if (selectedMonth.value !== null) b = pad12(b + (selectedMonth.value - 1));
+    if (selectedDay.value !== null) b = pad12(b + (selectedDay.value - 1));
+    if (selectedHour.value !== null) b = pad12(b + selectedHour.value);
+    return b;
+  }
   if (selectedDecade.value !== null) {
     const p = chart.value.palaces.find(p => p.daxianIndex === selectedDecade.value);
     return p ? p.branchIndex : null;
   }
-  return selectedBranch.value !== null ? selectedBranch.value : mingBranch();
+  return selectedBranch.value !== null ? selectedBranch.value : ming;
 });
 
 // 三方四正
@@ -151,6 +158,64 @@ function palaceLevelLabels(name: string): Array<{ text: string; color: string }>
   if (selectedYear.value) out.push({ text: '年' + short, color: LEVEL_COLORS.年 });
   if (selectedDecade.value !== null) out.push({ text: '限' + short, color: LEVEL_COLORS.限 });
   return out;
+}
+
+// 大限/流年/流月/流日/流时的四化标签（落在哪个宫就显示在哪个宫的干支上方）
+const levelHuaMap = computed(() => {
+  const map = new Map<number, Array<{ text: string; color: string }>>();
+  const push = (branch: number, text: string, color: string) => {
+    const arr = map.get(branch) || [];
+    arr.push({ text, color });
+    map.set(branch, arr);
+  };
+  const stemIndex = (ch: string) => STEMS.indexOf(ch);
+  // 年干→正月天干；正月干 = 寅首天干
+  const YIN_STEM_START: Record<number, number> = { 0: 2, 5: 2, 1: 4, 6: 4, 2: 6, 7: 6, 3: 8, 8: 8, 4: 0, 9: 0 };
+
+  const addLevel = (abbr: string, color: string, yStemIdx: number | null) => {
+    if (yStemIdx === null || !chart.value) return;
+    const huaMap = HUA_BY_YEAR[yStemIdx];
+    for (const [type, starName] of Object.entries(huaMap) as Array<['禄' | '权' | '科' | '忌', string]>) {
+      const palace = chart.value.palaces.find(p => p.stars.some(s => s.name === starName));
+      if (palace) push(palace.branchIndex, abbr + type, color);
+    }
+  };
+
+  // 大限：选中的大限盘命宫天干
+  if (selectedDecade.value !== null && chart.value) {
+    const p = chart.value.palaces.find(p => p.daxianIndex === (selectedDecade.value as number));
+    if (p) addLevel('限', LEVEL_COLORS.限, stemIndex(p.stemBranch[0]));
+  }
+  // 流年：选中年份的天干
+  if (selectedYear.value) addLevel('年', LEVEL_COLORS.年, stemIndex(selectedYear.value.ganzhi[0]));
+  // 流月：年→正月干→生水月干
+  if (selectedYear.value && selectedMonth.value !== null) {
+    const yStem = stemIndex(selectedYear.value.ganzhi[0]);
+    if (yStem >= 0) {
+      const monthStem = (YIN_STEM_START[yStem] + (selectedMonth.value - 1)) % 10;
+      addLevel('月', LEVEL_COLORS.月, monthStem);
+    }
+  }
+  // 流日 / 流时：选中年+月+日，按农历日干支
+  if (selectedYear.value && selectedMonth.value !== null && selectedDay.value !== null) {
+    try {
+      const lunar = Lunar.fromYmd(selectedYear.value.year, selectedMonth.value, selectedDay.value);
+      const dStem = stemIndex(lunar.getDayInGanZhi()[0]);
+      if (dStem >= 0) {
+        addLevel('日', LEVEL_COLORS.日, dStem);
+        if (selectedHour.value !== null) {
+          const ziStem: Record<number, number> = { 0: 0, 5: 0, 1: 2, 6: 2, 2: 4, 7: 4, 3: 6, 8: 6, 4: 8, 9: 8 };
+          const hourStem = (ziStem[dStem] + selectedHour.value) % 10;
+          addLevel('时', LEVEL_COLORS.时, hourStem);
+        }
+      }
+    } catch { /* ignore */ }
+  }
+  return map;
+});
+
+function levelHuaAt(branchIndex: number): Array<{ text: string; color: string }> {
+  return levelHuaMap.value.get(branchIndex) || [];
 }
 
 // 流年列表（选中大限后显示该大限对应的十年）
@@ -229,6 +294,9 @@ onMounted(() => {
                   </span>
                   <span v-if="star.hua" class="hua" :class="`hua-${star.hua}`">{{ star.hua }}</span>
                 </div>
+              </div>
+              <div class="level-hua">
+                <span v-for="chip in levelHuaAt(branchIndex)" :key="chip.text" class="lhua" :style="{ background: chip.color }">{{ chip.text }}</span>
               </div>
               <div class="cell-foot">
                 <span class="gz">{{ palaceAt(branchIndex)!.stemBranch }}</span>
@@ -431,6 +499,8 @@ onMounted(() => {
 .lt-cell { min-width: 56px; flex: 1; text-align: center; display: flex; flex-direction: column; border-right: 1px dashed #f3f4f6; padding: 0 2px; cursor: pointer; }
 .lt-cell.sel { background: #ede9fe; border-radius: 4px; }
 .level-label { text-align: right; font-size: 10px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
+.level-hua { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 2px; }
+.lhua { display: inline-block; padding: 0 3px; border-radius: 3px; font-size: 10px; color: #fff; line-height: 1.5; }
 .lt-age { font-size: 12px; font-weight: 700; color: #111; line-height: 1.2; }
 .lt-gz { font-size: 11px; color: #6b7280; line-height: 1.2; }
 .lt-cell { padding: 1px 2px; }

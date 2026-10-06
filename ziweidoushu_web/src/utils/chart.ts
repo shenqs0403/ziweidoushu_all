@@ -78,7 +78,7 @@ function getTianfuBranch(ziweiBranch: number): number {
 }
 
 // 各年干四化
-const HUA_BY_YEAR: Record<number, { 禄: string; 权: string; 科: string; 忌: string }> = {
+export const HUA_BY_YEAR: Record<number, { 禄: string; 权: string; 科: string; 忌: string }> = {
   0: { 禄: '廉贞', 权: '破军', 科: '武曲', 忌: '太阳' },
   1: { 禄: '天机', 权: '天梁', 科: '紫微', 忌: '太阴' },
   2: { 禄: '天同', 权: '天机', 科: '文昌', 忌: '廉贞' },

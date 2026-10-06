@@ -6,7 +6,7 @@
   "build": {
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "npm run build --prefix ../ziweidoushu_web",
-    "frontendDist": "../ziweidoushu_web/dist"
+    "frontendDist": "../../ziweidoushu_web/dist"
   },
   "app": {
     "windows": [

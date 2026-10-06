@@ -4,7 +4,7 @@ import type { PersonRecord } from '../types';
 import { loadRecords } from '../utils/storage';
 import { buildChart, BRIGHTNESS, BRANCHES, STEMS, HUA_BY_YEAR } from '../utils/chart';
 import { getStarInfo } from '../utils/starInfo';
-import { Solar, Lunar } from 'lunar-javascript';
+import { Solar, Lunar, LunarYear } from 'lunar-javascript';
 
 const props = defineProps<{
   recordId: string;
@@ -67,7 +67,7 @@ const 童限End = computed(() => (chart.value ? chart.value.起运Age - 1 : 0));
 const selectedBranch = ref<number | null>(null);
 const selectedDecade = ref<number | null>(null);
 const selectedYear = ref<{ year: number; age: number; ganzhi: string } | null>(null);
-const selectedMonth = ref<number | null>(null);
+const selectedMonth = ref<any>(null); // LunarMonth
 const selectedDay = ref<number | null>(null);
 const selectedHour = ref<number | null>(null);
 
@@ -100,7 +100,7 @@ function clickYear(l: { year: number; age: number; ganzhi: string }) {
   selectedHour.value = null;
 }
 
-function clickMonth(m: number) {
+function clickMonth(m: any) {
   selectedMonth.value = m;
   selectedDay.value = null;
   selectedHour.value = null;
@@ -132,7 +132,9 @@ const activeBranch = computed<number | null>(() => {
   if (selectedYear.value) {
     // 选了流月（及后续日/时）→ 以斗君宫为正月起点
     if (selectedMonth.value !== null && douJunBranchIdx.value !== null) {
-      let b = pad12(douJunBranchIdx.value + (selectedMonth.value - 1));
+      const mNum = Math.abs(selectedMonth.value.getMonth());
+      let mFor = selectedMonth.value.getMonth() > 0 ? mNum : (selectedDay.value !== null && selectedDay.value <= 15 ? mNum : mNum + 1);
+      let b = pad12(douJunBranchIdx.value + (mFor - 1));
       if (selectedDay.value !== null) b = pad12(b + (selectedDay.value - 1));
       if (selectedHour.value !== null) b = pad12(b + selectedHour.value);
       return b;
@@ -198,12 +200,12 @@ function starLevelChips(starName: string): Array<{ text: string; color: string }
     const yStem = stemIndex(selectedYear.value.ganzhi[0]);
     pushIf(LEVEL_COLORS.年, yStem);
     if (selectedMonth.value !== null && yStem >= 0) {
-      const monthStem = (YIN_STEM_START[yStem] + (selectedMonth.value - 1)) % 10;
+      const monthStem = (YIN_STEM_START[yStem] + (Math.abs(selectedMonth.value.getMonth()) - 1)) % 10;
       pushIf(LEVEL_COLORS.月, monthStem);
     }
     if (selectedMonth.value !== null && selectedDay.value !== null) {
       try {
-        const lunar = Lunar.fromYmd(selectedYear.value.year, selectedMonth.value, selectedDay.value);
+        const lunar = Lunar.fromYmd(selectedYear.value.year, selectedMonth.value.getMonth(), selectedDay.value);
         const dStem = stemIndex(lunar.getDayInGanZhi()[0]);
         pushIf(LEVEL_COLORS.日, dStem);
         if (selectedHour.value !== null && dStem >= 0) {
@@ -239,21 +241,32 @@ const liunianPreview = computed(() => {
 const DAY_NAMES = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
 const HOUR_NAMES = ['子时','丑时','寅时','卯时','辰时','巳时','午时','未时','申时','酉时','戌时','亥时'];
 
+const LUNAR_MONTH_NAMES = ['正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','冬月','腊月'];
+
+// 选中流年后，流月显示该农历年的实际月份（含闰月）
+const liuyueList = computed(() => {
+  if (!selectedYear.value) {
+    return LUNAR_MONTH_NAMES.map((name, i) => ({ key: 'd' + i, obj: null as any, label: name }));
+  }
+  try {
+    const months = LunarYear.fromYear(selectedYear.value.year).getMonths() as any[];
+    return months
+      .filter(m => m.getYear() === selectedYear.value!.year)
+      .map(m => ({
+        key: (m.isLeap() ? 'L' : '') + m.getMonth(),
+        obj: m,
+        label: (m.isLeap() ? '闰' : '') + LUNAR_MONTH_NAMES[Math.abs(m.getMonth()) - 1],
+      }));
+  } catch {
+    return LUNAR_MONTH_NAMES.map((name, i) => ({ key: 'd' + i, obj: null as any, label: name }));
+  }
+});
+
 // 选中流年+流月后，流日显示该农历月的天数范围；否则默认 30 天
 const monthDayCount = computed(() => {
   if (!selectedYear.value || !selectedMonth.value) return 30;
   try {
-    const lunarYear = selectedYear.value.year;
-    const m = selectedMonth.value;
-    let c = 0;
-    for (let d = 1; d <= 30; d++) {
-      try {
-        const l = Lunar.fromYmd(lunarYear, m, d);
-        c = Math.abs(l.getMonth()) === m ? d : c;
-        if (Math.abs(l.getMonth()) !== m) break;
-      } catch { break; }
-    }
-    return c || 30;
+    return selectedMonth.value.getDayCount() || 30;
   } catch { return 30; }
 });
 
@@ -370,8 +383,8 @@ onMounted(() => {
         <div class="limit-row liuyue-row">
           <span class="lb-title">流月</span>
           <div class="lt-cells">
-            <span class="lt-cell" v-for="m in 12" :key="'m' + m" :class="{ sel: selectedMonth === m }" @click="clickMonth(m)">
-              <span class="lt-age">{{ ['正','二','三','四','五','六','七','八','九','十','冬','腊'][m-1] }}月</span>
+            <span class="lt-cell" v-for="m in liuyueList" :key="m.key" :class="{ sel: m.obj !== null && selectedMonth === m.obj }" @click="clickMonth(m.obj)">
+              <span class="lt-age">{{ m.label }}</span>
             </span>
           </div>
         </div>

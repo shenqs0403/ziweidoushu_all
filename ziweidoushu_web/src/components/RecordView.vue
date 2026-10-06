@@ -319,11 +319,11 @@ onMounted(() => {
               <span class="hua hua-忌">忌</span>
             </div>
             <div class="hua-tip">
-              时间颜色　<span style="color:#1f2937;font-weight:700">大限</span>
-              <span style="color:#2563eb;font-weight:700">流年</span>
-              <span style="color:#7c3aed;font-weight:700">流月</span>
-              <span style="color:#0891b2;font-weight:700">流日</span>
-              <span style="color:#ea580c;font-weight:700">流时</span>
+              <span class="swatch-label"><span class="swatch" style="background:#1f2937"></span>大限</span>
+              <span class="swatch-label"><span class="swatch" style="background:#2563eb"></span>流年</span>
+              <span class="swatch-label"><span class="swatch" style="background:#7c3aed"></span>流月</span>
+              <span class="swatch-label"><span class="swatch" style="background:#0891b2"></span>流日</span>
+              <span class="swatch-label"><span class="swatch" style="background:#ea580c"></span>流时</span>
             </div>
           </div>
         </template>
@@ -469,6 +469,8 @@ onMounted(() => {
 .p-row.g-row .pl { font-size: 11px; font-weight: 400; }
 .hua-tip { font-size: 11px; color: #374151; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
 .hua-tip .hua { vertical-align: middle; }
+.swatch { display: inline-block; width: 12px; height: 8px; border-radius: 2px; margin-right: 3px; vertical-align: middle; }
+.swatch-label { font-weight: 600; color: #374151; margin-right: 8px; font-size: 11px; }
 
 .limit-block {
   margin-top: 8px; background: white; border: 1px solid #e5e7eb; border-radius: 8px;

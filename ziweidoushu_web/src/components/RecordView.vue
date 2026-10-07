@@ -390,7 +390,7 @@ onMounted(() => {
                   @click="openStar(star, palaceAt(branchIndex)!.branchIndex, palaceAt(branchIndex)!.name)"
                 >
                   <span class="star-name">{{ star.name }}</span>
-                  <span v-if="star.kind === 'major' && starBrightness(star.name, branchIndex)" class="mw">
+                  <span v-if="starBrightness(star.name, branchIndex)" class="mw">
                     {{ starBrightness(star.name, branchIndex) }}
                   </span>
                   <span v-if="star.hua" class="hua" :class="`hua-${star.hua}`">{{ star.hua }}</span>

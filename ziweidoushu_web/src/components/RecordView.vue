@@ -342,7 +342,7 @@ onMounted(() => {
         <template v-for="(branchIndex, idx) in GRID_LAYOUT" :key="idx">
           <div v-if="branchIndex !== null" class="palace" :class="{ ming: isMing(branchIndex), active: activeBranch === branchIndex, sf: sfBranches.has(branchIndex) }" @click="clickPalace(branchIndex)">
             <div v-if="palaceAt(branchIndex)">
-              <div class="stars">
+              <div class="stars" @mousedown="enableDragScroll" @click.capture="swallowDragClick">
                 <div
                   v-for="star in palaceAt(branchIndex)!.stars"
                   :key="star.name"
@@ -510,8 +510,9 @@ onMounted(() => {
 .palace > div { flex: 1; display: flex; flex-direction: column; }
 
 /* 星曜：同一行排，辅星比主星小、杂耀最小 */
-.stars { display: flex; flex-wrap: wrap; gap: 1px; margin-bottom: 2px; justify-content: flex-start; }
-.star-col { cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 1px 0; position: relative; }
+.stars { display: flex; flex-wrap: nowrap; gap: 1px; margin-bottom: 2px; overflow-x: auto; scrollbar-width: none; }
+.stars::-webkit-scrollbar { display: none; }
+.star-col { cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 1px 0; position: relative; flex-shrink: 0; }
 .level-hua-stack { position: absolute; top: calc(100% + 1px); left: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; z-index: 3; }
 .star-name { writing-mode: vertical-rl; line-height: 1.2; white-space: nowrap; }
 .star-col.major .star-name { color: #dc2626; font-weight: 700; font-size: 12px; }

@@ -52,6 +52,7 @@ function openStar(star: { name: string; kind: string; hua?: string }, branchInde
 function closeDrawer() { selected.value = null; }
 
 const starDetail = computed(() => (selected.value ? getStarInfo(selected.value.name) : null));
+const selectedHuaLevels = computed(() => (selected.value ? getStarHuaLevels(selected.value.name) : []));
 
 const daxianPreview = computed(() => {
   if (!chart.value) return [];
@@ -233,6 +234,44 @@ function starLevelChips(starName: string): Array<{ text: string; color: string }
     }
   }
   return chips;
+}
+
+// 星曜在各层级（大限/流年/流月/流日/流时）的四化
+function getStarHuaLevels(starName: string): Array<{ level: string; type: string; color: string }> {
+  const out: Array<{ level: string; type: string; color: string }> = [];
+  const stemIndex = (ch: string) => STEMS.indexOf(ch);
+  const YIN_STEM_START: Record<number, number> = { 0: 2, 5: 2, 1: 4, 6: 4, 2: 6, 7: 6, 3: 8, 8: 8, 4: 0, 9: 0 };
+  const pushIf = (level: string, color: string, yStemIdx: number | null) => {
+    if (!chart.value || yStemIdx === null || yStemIdx < 0) return;
+    const map = HUA_BY_YEAR[yStemIdx];
+    for (const [type, star] of Object.entries(map) as Array<['禄' | '权' | '科' | '忌', string]>) {
+      if (star === starName) out.push({ level, type, color });
+    }
+  };
+  if (selectedDecade.value !== null && chart.value) {
+    const p = chart.value.palaces.find(p => p.daxianIndex === (selectedDecade.value as number));
+    if (p) pushIf('大限', LEVEL_COLORS.限, stemIndex(p.stemBranch[0]));
+  }
+  if (selectedYear.value) {
+    const yStem = stemIndex(selectedYear.value.ganzhi[0]);
+    pushIf('流年', LEVEL_COLORS.年, yStem);
+    if (selectedMonth.value !== null && yStem >= 0) {
+      const monthStem = (YIN_STEM_START[yStem] + (Math.abs(selectedMonth.value.m) - 1)) % 10;
+      pushIf('流月', LEVEL_COLORS.月, monthStem);
+    }
+    if (selectedMonth.value !== null && selectedDay.value !== null) {
+      try {
+        const lunar = Lunar.fromYmd(selectedYear.value.year, selectedMonth.value.m, selectedDay.value);
+        const dStem = stemIndex(lunar.getDayInGanZhi()[0]);
+        pushIf('流日', LEVEL_COLORS.日, dStem);
+        if (selectedHour.value !== null && dStem >= 0) {
+          const ziStem: Record<number, number> = { 0: 0, 5: 0, 1: 2, 6: 2, 2: 4, 7: 4, 3: 6, 8: 6, 4: 8, 9: 8 };
+          pushIf('流时', LEVEL_COLORS.时, (ziStem[dStem] + selectedHour.value) % 10);
+        }
+      } catch { /* ignore */ }
+    }
+  }
+  return out;
 }
 
 // 流年列表（选中大限后显示该大限对应的十年）
@@ -465,20 +504,33 @@ onMounted(() => {
       <div class="drawer-header">
         <h2>
           {{ selected.name }}
+          <span class="kind-badge" :class="selected.kind">{{ selected.kind === 'major' ? '主星' : selected.kind === 'support' ? '辅星' : '杂耀' }}</span>
           <span v-if="selected.hua" class="hua" :class="`hua-${selected.hua}`">化{{ selected.hua }}</span>
         </h2>
         <button class="btn-close" @click="closeDrawer">&times;</button>
       </div>
       <div class="drawer-content">
         <p class="palace-label">{{ selected.palace }}</p>
-        <div class="info-block"><h3>星曜原文</h3><p>{{ starDetail?.原文 }}</p></div>
-        <div class="info-block"><h3>四化</h3><p>{{ starDetail?.四化 || '无显着四化' }}</p></div>
+        <div class="info-block">
+          <h3>星曜原文</h3>
+          <p>{{ starDetail?.原文 }}</p>
+        </div>
+        <div class="info-block">
+          <h3>四化</h3>
+          <div v-if="selectedHuaLevels.length" class="hua-level-list">
+            <span v-for="h in selectedHuaLevels" :key="h.level + h.type" class="hua-level-chip" :style="{ background: h.color }">{{ h.level }}化{{ h.type }}</span>
+          </div>
+          <p v-else>该星曜在当前选中的层级无四化。</p>
+        </div>
         <div class="info-block">
           <h3>庙旺平陷</h3>
           <p v-if="selected.brightness">本宫庙旺平陷：{{ selected.brightness }}</p>
           <p v-else>本宫无庙旺平陷标记（辅星/杂耀）。</p>
         </div>
-        <div class="info-block"><h3>吉凶</h3><p>{{ starDetail?.吉凶 }}</p></div>
+        <div class="info-block">
+          <h3>吉凶</h3>
+          <p>{{ starDetail?.吉凶 }}</p>
+        </div>
       </div>
     </div>
   </div>
@@ -590,6 +642,12 @@ onMounted(() => {
 @keyframes slideUp { from { transform: translateY(100%);} to { transform: translateY(0);} }
 .drawer-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid #e5e7eb; }
 .drawer-header h2 { font-size: 18px; margin: 0; display: flex; align-items: center; gap: 8px; }
+.kind-badge { font-size: 11px; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+.kind-badge.major { background: #fee2e2; color: #dc2626; }
+.kind-badge.support { background: #ede9fe; color: #7c3aed; }
+.kind-badge.misc { background: #f3f4f6; color: #4b5563; }
+.hua-level-list { display: flex; flex-wrap: wrap; gap: 4px; }
+.hua-level-chip { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; color: #fff; }
 .btn-close { background: none; border: none; font-size: 24px; color: #9ca3af; cursor: pointer; }
 .drawer-content { padding: 16px 18px 24px; }
 .palace-label { color: #9ca3af; font-size: 12px; margin: 0 0 12px; }

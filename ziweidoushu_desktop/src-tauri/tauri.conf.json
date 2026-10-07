@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "紫微斗数",
+  "productName": "ziweidoushu",
   "version": "1.0.0",
   "identifier": "com.linglongopc.ziweidoushu.desktop",
   "build": {

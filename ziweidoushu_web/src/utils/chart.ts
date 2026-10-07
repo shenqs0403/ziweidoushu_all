@@ -143,7 +143,7 @@ export function buildChart(record: PersonRecord): Chart {
     ['天机', pad(ziwei - 1)],
     ['太阳', pad(ziwei - 3)],
     ['武曲', pad(ziwei - 4)],
-    ['天同', pad(ziwei - 7)],
+    ['天同', pad(ziwei - 5)],
     ['廉贞', pad(ziwei - 8)],
     ['天府', tianfu],
     ['太阴', pad(tianfu + 1)],
@@ -152,7 +152,7 @@ export function buildChart(record: PersonRecord): Chart {
     ['天相', pad(tianfu + 4)],
     ['天梁', pad(tianfu + 5)],
     ['七杀', pad(tianfu + 6)],
-    ['破军', pad(tianfu + 8)],
+    ['破军', pad(tianfu + 10)],
   ];
 
   // 安辅星（文昌文曲按时辰）
@@ -162,8 +162,8 @@ export function buildChart(record: PersonRecord): Chart {
   const add = (name: string, branch: number) => aux.push([name, branch]);
   add('左辅', pad(4 + month - 1));             // 辰起正月顺
   add('右弼', pad(10 - month + 1));             // 戌起正月逆
-  add('文昌', pad(5 + hourBranchIdx));          // 子起巳顺
-  add('文曲', pad(9 - hourBranchIdx));          // 子起酉逆
+  add('文昌', pad(10 - hourBranchIdx));        // 戌上逆时觅文昌
+  add('文曲', pad(4 + hourBranchIdx));          // 辰上顺时文曲位
   // 天魁天钺（按年干）
   const kuiYueIndexes: Record<number, [number, number]> = {
     0: [1, 7], 4: [1, 7], 6: [1, 7],
@@ -193,8 +193,8 @@ export function buildChart(record: PersonRecord): Chart {
   else ma = 11;                                          // 亥卯未年亥马
   add('天马', ma);
   // 地空地劫
-  add('地空', pad(5 + hourBranchIdx));      // 子时起巳顺数
-  add('地劫', pad(11 - hourBranchIdx));      // 子时起亥逆数
+  add('地空', pad(11 - hourBranchIdx));      // 亥上子时逆数到地空
+  add('地劫', pad(11 + hourBranchIdx));      // 亥上子时顺数到地劫
 
   const starsAt = new Map<number, StarInstance[]>();
   const push = (branch: number, s: StarInstance) => {
@@ -208,8 +208,8 @@ export function buildChart(record: PersonRecord): Chart {
   const misc: Array<[string, number]> = [
     ['三台', pad(4 + month - 1 + (day - 1))],
     ['八座', pad(10 - month + 1 - (day - 1))],
-    ['恩光', pad(5 + hourBranchIdx + (day - 2))],
-    ['天贵', pad(9 - hourBranchIdx + (day - 2))],
+    ['恩光', pad(10 - hourBranchIdx + (day - 2))],
+    ['天贵', pad(4 + hourBranchIdx + (day - 2))],
     ['解神', [8, 10, 0, 2, 4, 6][Math.floor((month - 1) / 2)]],
     ['天刑', pad(9 + month - 1)],
     ['天姚', pad(1 + month - 1)],
@@ -239,11 +239,12 @@ export function buildChart(record: PersonRecord): Chart {
 
   const palaces: Palace[] = BRANCHES.map((_, i) => {
     const n = (i - mingBranch + 120) % 12; // 该宫距命宫偏移数（顺行）
+    const nameOffset = (mingBranch - i + 120) % 12; // 十二宫由命宫逆数
     const daxianIndex = forward ? n : (12 - n) % 12;
     return {
       branchIndex: i,
       branch: BRANCHES[i],
-      name: PALACE_NAMES[n],
+      name: PALACE_NAMES[nameOffset],
       stemBranch: STEMS[palaceStem(yearStemIdx, i)] + BRANCHES[i],
       daxianIndex,
       daxianStart: 起运Age + daxianIndex * 10,
@@ -251,12 +252,10 @@ export function buildChart(record: PersonRecord): Chart {
     };
   });
 
-  const mingZhu = ['贪狼', '巨门', '禄存', '文曲', '廉贞', '武曲', '破军', '武曲', '破军', '文曲', '太阴', '巨门'][mingBranch] ?? '贪狼';
-  const bodyZhuByBranch: Record<number, string> = {};
-  bodyZhuByBranch[0] = '铃星'; bodyZhuByBranch[1] = '天马'; bodyZhuByBranch[2] = '火星'; bodyZhuByBranch[3] = '天马';
-  bodyZhuByBranch[4] = '铃星'; bodyZhuByBranch[5] = '火星'; bodyZhuByBranch[6] = '火星'; bodyZhuByBranch[7] = '天马';
-  bodyZhuByBranch[8] = '铃星'; bodyZhuByBranch[9] = '火星'; bodyZhuByBranch[10] = '铃星'; bodyZhuByBranch[11] = '天马';
-  const bodyZhu = bodyZhuByBranch[(lunar.getYearZhiIndex() + 0) % 12] ?? '火星';
+  const MING_ZHU_BY_BRANCH = ['贪狼', '巨门', '禄存', '文曲', '廉贞', '武曲', '破军', '武曲', '廉贞', '文曲', '禄存', '巨门'];
+  const mingZhu = MING_ZHU_BY_BRANCH[mingBranch];
+  const BODY_ZHU_BY_YEAR = ['火星', '天相', '天梁', '天同', '文昌', '天机', '火星', '天相', '天梁', '天同', '文昌', '天机'];
+  const bodyZhu = BODY_ZHU_BY_YEAR[(lunar.getYearZhiIndex() + 0) % 12];
 
   return {
     yearGZ: lunar.getYearInGanZhi(),

@@ -195,6 +195,14 @@ export function buildChart(record: PersonRecord): Chart {
   // 地空地劫
   add('地空', pad(11 - hourBranchIdx));      // 亥上子时逆数到地空
   add('地劫', pad(11 + hourBranchIdx));      // 亥上子时顺数到地劫
+  // 火铃（按年支定起宫，再顺数到出生时辰）
+  let huoStart = 2, lingStart = 10;
+  if ([0, 4, 8].includes(yearBranchMap)) { huoStart = 2; lingStart = 10; }   // 申子辰：寅戌
+  else if ([2, 6, 10].includes(yearBranchMap)) { huoStart = 1; lingStart = 3; } // 寅午戌：丑卯
+  else if ([5, 9, 1].includes(yearBranchMap)) { huoStart = 3; lingStart = 10; }  // 巳酉丑：卯戌
+  else { huoStart = 9; lingStart = 10; }                                       // 亥卯未：酉戌
+  add('火星', pad(huoStart + hourBranchIdx));
+  add('铃星', pad(lingStart + hourBranchIdx));
 
   const starsAt = new Map<number, StarInstance[]>();
   const push = (branch: number, s: StarInstance) => {
@@ -220,7 +228,26 @@ export function buildChart(record: PersonRecord): Chart {
     ['凤阁', pad(10 - yearBranchMap)],
     ['天才', pad(mingBranch + yearBranchMap)],
     ['天寿', pad(bodyBranch + yearBranchMap)],
+    ['台辅', pad(6 + hourBranchIdx)],
+    ['封诰', pad(2 - hourBranchIdx)],
+    ['天巫', [5, 8, 2, 11][Math.floor((month - 1) / 3)]],
+    ['阴煞', [2, 0, 10, 8, 6, 4][Math.floor((month - 1) / 2)]],
+    ['截路空亡', [8, 6, 4, 2, 0][yearStemIdx % 5]],
+    ['天官', [7, 4, 5, 2, 3, 9, 11, 9, 10, 6][yearStemIdx]],
+    ['天福', [9, 8, 0, 11, 3, 2, 6, 5, 10, 5][yearStemIdx]],
+    ['天空', pad(yearBranchMap - 1)],
+    ['蜚廉', [8, 9, 10, 5, 6, 7, 2, 3, 4, 11, 0, 1][yearBranchMap]],
+    ['破碎', [5, 9, 1][Math.floor(yearBranchMap / 4)]],
+    ['华盖', [4, 1, 10, 7][Math.floor(yearBranchMap / 3)]],
+    ['咸池', [9, 6, 3, 0][Math.floor(yearBranchMap / 3)]],
+    ['天厨', [5, 6, 0, 5, 6, 8, 2, 6, 9, 11][yearStemIdx]],
+    ['天伤', pad(mingBranch - 7)],
+    ['天使', pad(mingBranch - 5)],
   ];
+  // 孤辰寡宿（按年支组）
+  const guGua: Array<[number, number]> = [[5, 1], [8, 4], [11, 7], [2, 10]];
+  const guIdx = Math.floor(yearBranchMap / 3);
+  misc.push(['孤辰', guGua[guIdx][0]], ['寡宿', guGua[guIdx][1]]);
   for (const [name, b] of misc) push(b, { name, kind: 'misc' });
   // 四化
   const huaMap = HUA_BY_YEAR[yearStemIdx];
